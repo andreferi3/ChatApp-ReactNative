@@ -19,13 +19,13 @@ export default class AuthLoadingScreen extends React.Component {
   componentWillMount() {
     // Your web app's Firebase configuration
     var firebaseConfig = {
-      apiKey: "AIzaSyAIXUkhnSfa9YJ9jXQvjnPBmrzNRDp_SfQ",
-      authDomain: "chatkuy-ffeab.firebaseapp.com",
-      databaseURL: "https://chatkuy-ffeab.firebaseio.com",
-      projectId: "chatkuy-ffeab",
+      apiKey: "<YOUR_API_KEY>",
+      authDomain: "<YOUR_FIREBASE_DOMAIN>",
+      databaseURL: "<YOUR_API_URL>",
+      projectId: "<YOUR_PROJECT_ID>",
       storageBucket: "",
-      messagingSenderId: "682272875357",
-      appId: "1:682272875357:web:e5d235c74d80540f"
+      messagingSenderId: "<YOUR_MESSAGING_ID>",
+      appId: "<YOUR_APP_ID>"
     };
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
