@@ -48,8 +48,6 @@ export default class Login extends Component {
     let email = this.state.email;
     let password = this.state.password;
 
-    User.email = this.state.email;
-
     await firebase
       .auth()
       .signInWithEmailAndPassword(email, password)
@@ -109,16 +107,16 @@ export default class Login extends Component {
 
           <View style={styles.container}>
 
-            {
-              this.state.isLoading === true ? <ActivityIndicator size={'large'} /> : null
-            }
-
             <View style={styles.containerImage}>
               <Image source={require('../assets/icon/chatrobot.png')} style={styles.imageSize} />
             </View>
 
             <Text style={styles.textLogo}
             >Chat Kuy</Text>
+
+            {
+              this.state.isLoading === true ? <ActivityIndicator size={'large'} /> : null
+            }
 
             <TextInput style={styles.textInput} placeholder='Email address...' keyboardType={'email-address'} onChangeText={this._onChangeEmail} value={this.state.email} />
             {

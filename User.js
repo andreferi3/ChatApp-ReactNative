@@ -4,7 +4,9 @@ const User = {
     phone: null,
     name: null,
     avatar: null,
-    uid: null
+    uid: null,
+    latitude: null,
+    longtitude: null
 }
 
 export default User;

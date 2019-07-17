@@ -23,11 +23,11 @@ export default class Register extends Component {
 
     this.state = {
       phone: '',
-      date: '',
+      image: '',
       name: '',
       password: '',
       email: '',
-      image: 'http://deafhhcenter.org/wp-content/uploads/2017/12/profile-default.jpg',
+      image: '',
       errPhone: false,
       errName: false,
       errAge: false,
@@ -36,20 +36,20 @@ export default class Register extends Component {
     }
   }
 
-  datePicker = async () => {
-    try {
-      const { action, year, month, day } = await DatePickerAndroid.open({
-        date: new Date(),
-      });
-      if (action == DatePickerAndroid.dateSetAction) {
-        this.setState({
-          date: `${day}/${month + 1}/${year}`
-        })
-      }
-    } catch ({ code, message }) {
-      console.warn('Cannot open date picker', message);
-    }
-  }
+  // datePicker = async () => {
+  //   try {
+  //     const { action, year, month, day } = await DatePickerAndroid.open({
+  //       date: new Date(),
+  //     });
+  //     if (action == DatePickerAndroid.dateSetAction) {
+  //       this.setState({
+  //         date: `${day}/${month + 1}/${year}`
+  //       })
+  //     }
+  //   } catch ({ code, message }) {
+  //     console.warn('Cannot open date picker', message);
+  //   }
+  // }
 
   validate = () => {
     if (this.state.phone.length < 10) {
@@ -66,11 +66,6 @@ export default class Register extends Component {
       this.setState({ errName: 'Too short!' })
     } else {
       this.setState({ errName: false })
-    }
-    if (this.state.date.length == '') {
-      this.setState({ errAge: 'Sorry! Age must be filled' })
-    } else {
-      this.setState({ errAge: false })
     }
     if (this.state.name != '' && this.state.date != '' && this.state.email != '' && this.state.password != '') {
       this.register()
@@ -90,9 +85,9 @@ export default class Register extends Component {
       ({user}) => firebase.database().ref('users/' + user.uid).set({
         email: this.state.email,
         name: this.state.name,
-        age: this.state.date,
         password: this.state.password,
-        phone: this.state.phone
+        phone: this.state.phone,
+        avatar: this.state.image
       })
     )
     .catch(error => {
@@ -145,7 +140,14 @@ export default class Register extends Component {
     }
   }
 
+  changeImage = val => {
+    this.setState({
+      image: val.slice(0,4) !== 'http' ? 'http://www.thesanctuaryinstitute.org/wp-content/uploads/2018/07/missing-image-avatar.png' : val
+    })
+  }
+
   render() {
+    console.warn(this.state.image);
     return (
       <React.Fragment>
         <StatusBar hidden />
@@ -173,10 +175,10 @@ export default class Register extends Component {
             }
 
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
-              <TextInput style={[styles.textInput, { width: '80%' }]} value={this.state.date} placeholder='Enter your age...' />
-              <TouchableOpacity style={{ backgroundColor: '#fff', padding: 10, borderRadius: 50, marginLeft: 15 }} onPress={this.datePicker}>
-                <Image source={require('../assets/icon/calendar.png')} />
-              </TouchableOpacity>
+              <TextInput style={[styles.textInput, { width: '80%' }]} placeholder='Image url...' onChangeText={this.changeImage} />
+              <View style={{ borderRadius: 50, marginLeft: 9 }}>
+                <Image source={{uri: this.state.image.slice(0,4) !== 'http' ? 'http://www.thesanctuaryinstitute.org/wp-content/uploads/2018/07/missing-image-avatar.png' : this.state.image}} style={{width:45, height:45, borderRadius:50}} />
+              </View>
             </View>
             {
               this.state.errAge !== false ? <Text style={{ marginTop: 10, marginLeft: 5, color: '#ff0000' }}>{this.state.errAge}</Text> : null

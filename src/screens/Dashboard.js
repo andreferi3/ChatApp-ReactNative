@@ -27,8 +27,8 @@ export default class Dashboard extends Component {
         let dbRef = firebase.database().ref('users');
         dbRef.on('child_added', (val) => {
             let person = val.val();
+            console.warn("USer : " + JSON.stringify(person))
             person.uid = val.key;
-            console.warn(User.uid);
             if(person.uid === User.uid) {
                 User.name = person.name,
                 User.phone = person.phone,
@@ -43,11 +43,15 @@ export default class Dashboard extends Component {
             } else {
                 this.setState((prevState) => {
                     return {
-                        email: person.email,
                         users: [...prevState.users, person]
                     }
                 })
             }
+        })
+
+        firebase.database().ref('messages/' + User.phone).endAt().on('child_changed', (val) => {
+            let message = val.val();
+            console.warn(message);
         })
     }
 
