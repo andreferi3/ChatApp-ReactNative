@@ -37,11 +37,9 @@ export default class Maps extends Component {
     }
 
     async getUserLocation() {
-        this.setState({ isLoading: true })
         await navigator.geolocation.getCurrentPosition(
             (position) => {
                 this.setState({
-                    isLoading: false,
                     latitude: position.coords.latitude,
                     longitude: position.coords.longitude
                 })
@@ -83,25 +81,46 @@ export default class Maps extends Component {
         })
     }
 
+    componentDidMount() {
+        navigator.geolocation.watchPosition(
+            position => {
+             this.setState({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude
+            })
+            firebase.database().ref('users/' + User.uid + '/location').set({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude
+            })
+            },
+            error => console.warn(error),
+            { 
+              enableHighAccuracy: true,
+              timeout: 20000,
+              maximumAge: 1000,
+              distanceFilter: 10
+            }
+        );
+    }
+
     render() {
         return (
             <React.Fragment>
                 <View style={styles.container}>
                     <MapView
                         style={styles.map}
-                        loadingEnabled={true}
                         showsUserLocation={true}
                         region={{
-                            latitude: this.state.isLoading === true ? <ActivityIndicator size={'large'} /> : this.state.latitude,
-                            longitude: this.state.isLoading === true ? <ActivityIndicator size={'large'} /> : this.state.longitude,
+                            latitude: this.state.latitude,
+                            longitude: this.state.longitude,
                             latitudeDelta: 0.0043,
                             longitudeDelta: 0.0034
                         }}
                     >
                         <Marker
                             coordinate={{
-                                latitude: this.state.isLoading === true ? <ActivityIndicator size={'large'} /> : this.state.latitude,
-                                longitude: this.state.isLoading === true ? <ActivityIndicator size={'large'} /> : this.state.longitude,
+                                latitude: this.state.latitude,
+                                longitude: this.state.longitude,
                                 latitudeDelta: 0.0043,
                                 longitudeDelta: 0.0034
                             }}>
