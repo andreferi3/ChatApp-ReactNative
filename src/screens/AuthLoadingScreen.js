@@ -8,8 +8,6 @@ import {
 import User from '../../User';
 import firebase from 'firebase';
 
-console.disableYellowBox = true
-
 export default class AuthLoadingScreen extends React.Component {
   constructor(props) {
     super(props);
@@ -33,11 +31,12 @@ export default class AuthLoadingScreen extends React.Component {
 
   // Fetch the token from storage then navigate to our appropriate place
   _bootstrapAsync = async () => {
-    User.phone = await AsyncStorage.getItem('userPhone');
+    User.email = await AsyncStorage.getItem('userEmail');
+    User.uid = await AsyncStorage.getItem('userId');
 
     // This will switch to the App screen or Auth screen and this loading
     // screen will be unmounted and thrown away.
-    this.props.navigation.navigate(User.phone ? 'App' : 'Auth');
+    this.props.navigation.navigate(User.email ? 'App' : 'Auth');
   };
 
   // Render any loading content that you like here

@@ -3,6 +3,9 @@ import Login from '../screens/Login';
 import Register from '../screens/Register';
 import Dashboard from '../screens/Dashboard';
 import AuthLoadingScreen from '../screens/AuthLoadingScreen';
+import Chat from '../screens/Chat';
+import Profile from '../screens/Profile';
+import Maps from '../screens/Maps';
 
 // Implementation of HomeScreen, OtherScreen, SignInScreen, AuthLoadingScreen
 // goes here.
@@ -13,7 +16,18 @@ const AppStack = createStackNavigator({
     navigationOptions: () => ({
       header: null,
     })
+  },
+  Chat: {
+    screen: Chat
+  },
+  Profile: {
+    screen: Profile
+  },
+  Maps: {
+    screen: Maps
   }
+}, {
+  initialRouteName: 'Maps'
 });
 const AuthStack = createStackNavigator({ 
   Login: {

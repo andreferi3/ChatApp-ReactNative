@@ -57,7 +57,6 @@ const styles = StyleSheet.create({
     },
     footer: {
       flex:1,
-      marginTop: 60,
       justifyContent:'flex-end', 
       alignItems:'center'
     },

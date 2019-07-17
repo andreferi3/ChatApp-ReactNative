@@ -1,86 +1,117 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import {
-  Text, 
+  Text,
   View,
   TextInput,
   TouchableOpacity,
   Image,
   StatusBar,
-  Alert,
-  AsyncStorage
+  AsyncStorage,
+  ActivityIndicator
 } from 'react-native';
+import firebase from 'firebase';
 import LinearGradient from 'react-native-linear-gradient';
 import User from '../../User';
 import styles from '../constants/styles';
 
-console.disableYellowBox = true
-
 export default class Login extends Component {
 
-    constructor() {
-        super();
+  constructor() {
+    super();
 
-        this.state = {
-            phone: '',
-            password: ''       
-        }
+    this.state = {
+      email: '',
+      password: '',
+      isLoading: false,
+      errEmail: true,
+      errPassword: true
     }
+  }
 
-    componentWillMount() {
-        AsyncStorage.getItem('userPhone').then(val => {
-            if(val) {
-                this.setState({phone: val})
-            }
-        })
+  validate = async () => {
+    if (this.state.password.length < 6) {
+      this.setState({ errPassword: 'Too short!' })
+    } else {
+      this.setState({ errPassword: true })
     }
+    if (this.state.errEmail != false && this.state.errPassword != false) {
+      await AsyncStorage.setItem('userEmail', this.state.email);
+      this.login()
+    }
+  }
 
-    login = async () => {
-        if(this.state.phone.length < 10) {
-            Alert.alert(
-                'Failed',
-                `Sorry! Your phone number less than 10`
-            )
-            if(this.state.password.length < 6) {
-                Alert.alert(
-                    'Failed!',
-                    `Sorry! Your password less than 6`
-                )
-            }
+  login = async () => {
+    this.setState({
+      isLoading: true
+    })
+
+    let email = this.state.email;
+    let password = this.state.password;
+
+    User.email = this.state.email;
+
+    await firebase
+      .auth()
+      .signInWithEmailAndPassword(email, password)
+      .then(async ({ user }) => {
+        User.uid = user.uid;
+        User.email = this.state.email;
+        await AsyncStorage.setItem('userId', user.uid);
+        this.props.navigation.navigate('App');
+        this.setState({isLoading:false})
+      }).catch(function (error) {
+        // Handle Errors here.
+        var errorCode = error.code;
+        var errorMessage = error.message;
+        if (errorCode === 'auth/wrong-password') {
+          alert('Wrong password.');
+          this.setState({isLoading:false})
         } else {
-            Alert.alert(
-                'Berhasil',
-                `Nomor Anda : ${this.state.phone}\nPassword : ${this.state.password}`
-            )
-
-            await AsyncStorage.setItem('userPhone', this.state.phone);
-            User.phone = this.state.phone;
-            this.props.navigation.navigate('App');
+          alert(errorMessage);
+          this.setState({isLoading:false})
         }
-    }
+        console.log(error);
+      });
+  }
 
-    _onChangePhone = val => {
-        this.setState({
-            phone: val
-        })
+  _onChangeEmail = (text) => {
+    let reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    if (reg.test(text) === false) {
+      this.setState({
+        errEmail: "Email is Not Correct"
+      })
+      this.setState({ email: text })
+      return false;
     }
-
-    _onChangePassword = val => {
-        this.setState({
-            password: val
-        })
+    else {
+      this.setState({
+        email: text,
+        errEmail: true
+      })
     }
+  }
 
-  render() {    
+  _onChangePassword = val => {
+    this.setState({
+      password: val
+    })
+  }
+
+  render() {
     return (
       <React.Fragment>
-          <StatusBar hidden />
-          <LinearGradient 
-            start={{x: 0, y: 0}} 
-            end={{x: 1, y: 0}} 
-            colors={['#48c6ef', '#6f86d6']} 
-            style={styles.backgroundGradient}>
+        <StatusBar hidden />
+        <LinearGradient
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          colors={['#48c6ef', '#6f86d6']}
+          style={styles.backgroundGradient}>
 
-            <View style={styles.container}>
+          <View style={styles.container}>
+
+            {
+              this.state.isLoading === true ? <ActivityIndicator size={'large'} /> : null
+            }
 
             <View style={styles.containerImage}>
               <Image source={require('../assets/icon/chatrobot.png')} style={styles.imageSize} />
@@ -89,17 +120,23 @@ export default class Login extends Component {
             <Text style={styles.textLogo}
             >Chat Kuy</Text>
 
-            <TextInput style={styles.textInput} placeholder='Phone number...' keyboardType={'numeric'} onChangeText={this._onChangePhone} value={this.state.phone} />
+            <TextInput style={styles.textInput} placeholder='Email address...' keyboardType={'email-address'} onChangeText={this._onChangeEmail} value={this.state.email} />
+            {
+              this.state.errEmail !== true ? <Text style={{ marginTop: 10, marginLeft: 5, color: '#ff0000' }}>{this.state.errEmail}</Text> : null
+            }
 
-            <TextInput style={[styles.textInput, {marginTop:20}]} placeholder='Password...' secureTextEntry={true} onChangeText={this._onChangePassword} value={this.state.password} />
+            <TextInput style={[styles.textInput, { marginTop: 20 }]} placeholder='Password...' secureTextEntry={true} onChangeText={this._onChangePassword} value={this.state.password} />
+            {
+              this.state.errPassword !== true ? <Text style={{ marginTop: 10, marginLeft: 5, color: '#ff0000' }}>{this.state.errPassword}</Text> : null
+            }
 
-            <TouchableOpacity style={styles.flexRow} onPress={() => this.login()}>
+            <TouchableOpacity style={styles.flexRow} onPress={() => this.validate()}>
               <View style={styles.button}>
                 <Text style={styles.textButton}>Login</Text>
               </View>
             </TouchableOpacity>
 
-            <View style={[styles.flexRow, {flexDirection:'row', marginTop:50, alignItems:'center'}]}>
+            <View style={[styles.flexRow, { flexDirection: 'row', marginTop: 50, alignItems: 'center' }]}>
               <Text style={styles.whiteText}>Or login using</Text>
               <Image source={require('../assets/icon/facebook.png')} style={styles.iconLogin} />
               <View style={styles.googleLogin}>
@@ -107,7 +144,7 @@ export default class Login extends Component {
               </View>
             </View>
 
-            <View style={styles.footer}>
+            <View style={[styles.footer, { marginTop: 60 }]}>
               <View style={styles.flexRow}>
                 <Text style={styles.footerText}>Don't have an account ? </Text>
                 <TouchableOpacity onPress={() => this.props.navigation.navigate('Register')}>
@@ -115,7 +152,7 @@ export default class Login extends Component {
                 </TouchableOpacity>
               </View>
             </View>
-        </View>
+          </View>
         </LinearGradient>
       </React.Fragment>
     );
