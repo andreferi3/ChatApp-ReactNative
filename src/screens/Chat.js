@@ -17,15 +17,16 @@ export default class Chat extends Component {
         this.state = {
             messageList: [],
             person: {
+                uid: props.navigation.getParam('uid'),
                 name: props.navigation.getParam('name'),
-                phone: props.navigation.getParam('phone')
+                avatar: props.navigation.getParam('avatar')
             },
             textMessage: ''
         }
     }
 
     componentWillMount() {
-        firebase.database().ref('messages').child(User.phone).child(this.state.person.phone).on('child_added', (value) => {
+        firebase.database().ref('messages').child(User.uid).child(this.state.person.uid).on('child_added', (value) => {
             this.setState((prevState) => {
                 return {
                     messageList: [...prevState.messageList, value.val()]
@@ -51,16 +52,35 @@ export default class Chat extends Component {
 
     sendMessage = async () => {
         if (this.state.textMessage.length > 0) {
-            let msgId = firebase.database().ref('messages').child(User.phone).child(this.state.person.phone).push().key;
+            let msgId = firebase.database().ref('messages').child(User.uid).child(this.state.person.uid).push().key;
             let updates = {};
+            let updateUserMessage = {};
             let message = {
                 message: this.state.textMessage,
                 time: firebase.database.ServerValue.TIMESTAMP,
                 from: User.phone
             }
-            updates['messages/' + User.phone + '/' + this.state.person.phone + '/' + msgId] = message;
-            updates['messages/' + this.state.person.phone + '/' + User.phone + '/' + msgId] = message;
+            let receiverProfile = {
+                uid: this.state.person.uid,
+                name: this.state.person.name,
+                avatar: this.state.person.avatar,
+                time: firebase.database.ServerValue.TIMESTAMP,
+                messageText: this.state.textMessage
+            }
+
+            let senderProfile = {
+                uid: User.uid,
+                name: User.name,
+                avatar: User.avatar,
+                time: firebase.database.ServerValue.TIMESTAMP,
+                messageText: this.state.textMessage
+            }
+            updates['messages/' + User.uid + '/' + this.state.person.uid + '/' + msgId] = message;
+            updates['messages/' + this.state.person.uid + '/' + User.uid + '/' + msgId] = message;
             firebase.database().ref().update(updates);
+            updateUserMessage['users/' + User.uid + '/message/' + this.state.person.uid] = receiverProfile;
+            updateUserMessage['users/' + this.state.person.uid + '/message/' + User.uid] = senderProfile;
+            firebase.database().ref().update(updateUserMessage);
             this.setState({
                 textMessage: ''
             })

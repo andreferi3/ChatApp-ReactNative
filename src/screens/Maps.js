@@ -84,21 +84,21 @@ export default class Maps extends Component {
     componentDidMount() {
         navigator.geolocation.watchPosition(
             position => {
-             this.setState({
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude
-            })
-            firebase.database().ref('users/' + User.uid + '/location').set({
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude
-            })
+                this.setState({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                })
+                firebase.database().ref('users/' + User.uid + '/location').set({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                })
             },
             error => console.warn(error),
-            { 
-              enableHighAccuracy: true,
-              timeout: 20000,
-              maximumAge: 1000,
-              distanceFilter: 10
+            {
+                enableHighAccuracy: true,
+                timeout: 20000,
+                maximumAge: 1000,
+                distanceFilter: 10
             }
         );
     }
@@ -124,19 +124,19 @@ export default class Maps extends Component {
                                 latitudeDelta: 0.0043,
                                 longitudeDelta: 0.0034
                             }}>
-                                <Image source={{uri:User.avatar}} style={{width:50, height:50, borderRadius:50}} />
-                            </Marker>
+                            <Image source={{ uri: User.avatar }} style={{ width: 50, height: 50, borderRadius: 50 }} />
+                        </Marker>
 
                         {
                             this.state.users.map(data => (
-                                <Marker 
+                                <Marker
                                     coordinate={{
                                         latitude: data.location.latitude,
                                         longitude: data.location.longitude,
                                         latitudeDelta: 0.0043,
                                         longitudeDelta: 0.0034
                                     }}>
-                                        <Image source={{uri:data.avatar}} style={{width:50, height:50, borderRadius:50}} />
+                                    <Image source={{ uri: data.avatar }} style={{ width: 50, height: 50, borderRadius: 50 }} />
                                 </Marker>
                             ))
                         }
@@ -169,6 +169,10 @@ export default class Maps extends Component {
                 </LinearGradient>
             </React.Fragment>
         )
+    }
+
+    componentWillUnmount() {
+        navigator.geolocation.clearWatch(this.watchID);
     }
 }
 

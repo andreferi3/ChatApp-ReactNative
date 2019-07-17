@@ -24,35 +24,43 @@ export default class Dashboard extends Component {
     }
 
     componentWillMount() {
-        let dbRef = firebase.database().ref('users');
+        let dbRef = firebase.database().ref('users/' + User.uid + '/message');
         dbRef.on('child_added', (val) => {
             let person = val.val();
-            console.warn("USer : " + JSON.stringify(person))
             person.uid = val.key;
-            if(person.uid === User.uid) {
-                User.name = person.name,
-                User.phone = person.phone,
-                User.avatar = person.avatar,
-                User.email = person.email,
-                User.data = {
-                    name: User.name,
-                    phone: User.phone,
-                    avatar: User.avatar,
-                    email: User.email
+            console.warn(person);
+            this.setState((prevState) => {
+                return {
+                    users: [...prevState.users, person]
                 }
-            } else {
-                this.setState((prevState) => {
-                    return {
-                        users: [...prevState.users, person]
-                    }
-                })
-            }
+            })
         })
 
-        firebase.database().ref('messages/' + User.phone).endAt().on('child_changed', (val) => {
-            let message = val.val();
-            console.warn(message);
+        let userRef = firebase.database().ref('users/' + User.uid);
+        userRef.on('value', (val) => {
+            let user = val.val();
+            User.name = user.name,
+            User.phone = user.phone,
+            User.avatar = user.avatar,
+            User.email = user.email,
+            User.data = {
+                name: User.name,
+                phone: User.phone,
+                avatar: User.avatar,
+                email: User.email
+            }
         })
+    }
+
+    convertTime = (time) => {
+        let d = new Date(time);
+        let c = new Date();
+        let result = (d.getHours() < 10 ? '0' : '') + d.getHours() + ':';
+        result += (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
+        if(c.getDay() !== d.getDay()) {
+            result = d.getDay() + ' '  + d.getMonth() + ' ' + result;
+        }
+        return result;
     }
 
     logout = async () => {
@@ -67,10 +75,10 @@ export default class Dashboard extends Component {
                     <Image source={{ uri: item.avatar }} style={{ width: 50, height: 50, borderRadius: 50 }} />
                     <View style={{ padding: 10, flex: 3 }}>
                         <Text style={{ fontSize: 23, color: '#f1f1f1', fontFamily: 'sans-serif-medium', fontWeight: 'bold' }}>{item.name}</Text>
-                        <Text style={{ fontFamily: 'sans-serif-light', fontSize: 16, fontWeight: '600' }} numberOfLines={1}>Kamu : Halo lagi apa ?</Text>
+                        <Text style={{ fontFamily: 'sans-serif-light', fontSize: 16, fontWeight: '600' }} numberOfLines={1}>Kamu : {item.messageText}</Text>
                     </View>
                     <View style={{ padding: 10, flex: 1, justifyContent: 'center', alignItems: 'flex-end' }}>
-                        <Text style={{ color: '#f1f1f1', fontSize: 11, fontFamily: 'sans-serif-medium' }}>07:09</Text>
+                        <Text style={{ color: '#f1f1f1', fontSize: 11, fontFamily: 'sans-serif-medium' }}>{this.convertTime(item.time)}</Text>
                     </View>
                 </View>
             </TouchableOpacity>
@@ -88,7 +96,7 @@ export default class Dashboard extends Component {
 
                     <FlatList
                         data={this.state.users}
-                        keyExtractor={(item) => item.phone}
+                        keyExtractor={(item) => item.uid}
                         renderItem={this._renderItem} />
                 </LinearGradient>
 
@@ -101,7 +109,7 @@ export default class Dashboard extends Component {
                         <View style={{ flex: 1 }}>
                             <Text style={{ fontSize: 23, color: '#f1f1f1', fontFamily: 'sans-serif-medium', fontWeight: 'bold' }}>Chat Room</Text>
                         </View>
-                        <TouchableOpacity style={{ flex: 1, alignItems:'flex-end' }} onPress={this.logout}>
+                        <TouchableOpacity style={{ flex: 1, alignItems: 'flex-end' }} onPress={this.logout}>
                             <Text style={{ fontSize: 23, color: '#f1f1f1', fontFamily: 'sans-serif-medium', fontWeight: 'bold' }}>Logout</Text>
                         </TouchableOpacity>
                     </View>
@@ -114,17 +122,17 @@ export default class Dashboard extends Component {
                     style={{ position: 'absolute', bottom: 0, right: 0, left: 0, elevation: 8 }}>
                     <View style={{ flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 15, alignItems: 'center' }}>
                         <TouchableOpacity style={{ flex: 1, alignItems: 'center' }}>
-                            <View style={{ backgroundColor: '#rgba(255,255,255,0.7)', padding: 10, borderRadius: 50, elevation:5 }}>
+                            <View style={{ backgroundColor: '#rgba(255,255,255,0.7)', padding: 10, borderRadius: 50, elevation: 5 }}>
                                 <Image source={require('../assets/icon/chat.png')} style={{ width: 45, height: 45 }} />
                             </View>
                         </TouchableOpacity>
                         <TouchableOpacity style={{ flex: 1, alignItems: 'center' }} onPress={() => this.props.navigation.navigate('Maps')}>
-                            <View style={{ backgroundColor: '#rgba(255,255,255,0.7)', padding: 10, borderRadius: 50, elevation:5 }}>
+                            <View style={{ backgroundColor: '#rgba(255,255,255,0.7)', padding: 10, borderRadius: 50, elevation: 5 }}>
                                 <Image source={require('../assets/icon/location.png')} style={{ width: 30, height: 30 }} />
                             </View>
                         </TouchableOpacity>
                         <TouchableOpacity style={{ flex: 1, alignItems: 'center' }} onPress={() => this.props.navigation.navigate('Profile', User.data)}>
-                            <View style={{ backgroundColor: '#rgba(255,255,255,0.7)', padding: 10, borderRadius: 50, elevation:5 }}>
+                            <View style={{ backgroundColor: '#rgba(255,255,255,0.7)', padding: 10, borderRadius: 50, elevation: 5 }}>
                                 <Image source={require('../assets/icon/man.png')} style={{ width: 30, height: 30 }} />
                             </View>
                         </TouchableOpacity>
