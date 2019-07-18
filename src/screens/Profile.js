@@ -34,13 +34,10 @@ export default class Profile extends Component {
             swipeToClose: true,
             sliderValue: 0.3,
             friend: [],
-            user: {
-                name: props.navigation.getParam('name'),
-                avatar: props.navigation.getParam('avatar'),
-                phone: props.navigation.getParam('phone'),
-                email: props.navigation.getParam('email')
-            },
-            name: ''
+            name: props.navigation.getParam('name'),
+            avatar: props.navigation.getParam('avatar'),
+            phone: props.navigation.getParam('phone'),
+            email: props.navigation.getParam('email'),
         }
     }
 
@@ -82,6 +79,41 @@ export default class Profile extends Component {
         console.warn('the open/close of the swipeToClose just changed');
     }
 
+    changeImage = (val) => {
+        this.setState((prevState) => {
+            return {
+                avatar: prevState.avatar = val
+            }
+        })
+    }
+
+    changeName = (val) => {
+        this.setState((prevState) => {
+            return {
+                name: prevState.name = val
+            }
+        })
+    }
+
+    changeEmail = (val) => {
+        this.setState((prevState) => {
+            return {
+                email: prevState.email = val
+            }
+        })
+    }
+
+    _updateProfile = () => {
+        let dbRef = firebase.database().ref('users/'+User.uid);
+        dbRef.update({
+            avatar: this.state.avatar,
+            name: this.state.name,
+            email: this.state.email
+        })
+        this.refs.modal3.close()
+        alert('Edit Profile Successfull!')
+    }
+
     _renderItem = ({ item }) => {
         return (
             <TouchableOpacity style={{ flexDirection: 'row', padding: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.2)' }} onPress={() => this.props.navigation.navigate('Chat', item)}>
@@ -106,11 +138,11 @@ export default class Profile extends Component {
 
                     <TouchableOpacity style={{ flexDirection: 'row', padding: 15, alignItems: 'center' }} onPress={() => this.refs.modal3.open()}>
                         <View>
-                            <Image source={{ uri: this.state.user.avatar }} style={{ width: 100, height: 100, borderRadius: 100 }} />
+                            <Image source={{ uri: this.state.avatar }} style={{ width: 100, height: 100, borderRadius: 100 }} />
                         </View>
                         <View style={{ flex: 1, marginLeft: 10 }}>
-                            <Text style={{ fontSize: 24, color: '#2e373c', fontFamily: 'sans-serif-medium' }}>{this.state.user.name}</Text>
-                            <Text style={{ fontSize: 16, color: '#2e373c', fontFamily: 'sans-serif-medium' }}>{this.state.user.email}</Text>
+                            <Text style={{ fontSize: 24, color: '#2e373c', fontFamily: 'sans-serif-medium' }}>{this.state.name}</Text>
+                            <Text style={{ fontSize: 16, color: '#2e373c', fontFamily: 'sans-serif-medium' }}>{this.state.email}</Text>
                         </View>
                     </TouchableOpacity>
 
@@ -131,23 +163,23 @@ export default class Profile extends Component {
                                 <Text style={{ fontSize: 24, color: '#2e373c', fontFamily: 'sans-serif-medium' }}>Edit Profile</Text>
                             </View>
                             <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 10, marginBottom: 17 }}>
-                                <Image source={{ uri: User.avatar }} style={{ width: 80, height: 80, borderRadius: 50 }} />
+                                <Image source={{ uri: this.state.avatar }} style={{ width: 80, height: 80, borderRadius: 50 }} />
                             </View>
                             <View style={{ marginBottom: 15 }}>
                                 <Text>Change Image</Text>
-                                <TextInput placeholder='put image url here...' style={{ borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.087)' }} onChangeText={this.changeImage} />
+                                <TextInput placeholder='put image url here...' style={{ borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.087)' }} onChangeText={this.changeImage}>{this.state.avatar}</TextInput>
                             </View>
                             <View style={{ marginBottom: 15 }}>
                                 <Text>Name</Text>
-                                <TextInput placeholder='Edit name...' onChangeText={this.changeName} style={{ borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.087)' }} >{User.name}</TextInput>
+                                <TextInput placeholder='Edit name...' onChangeText={this.changeName} style={{ borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.087)' }} >{this.state.name}</TextInput>
                             </View>
-                            <View style={{ marginBottom: 15 }}>
+                            <View>
                                 <Text>Email</Text>
-                                <TextInput placeholder='Edit name...' onChangeText={this.changeEmail} style={{ borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.087)' }} >{User.email}</TextInput>
+                                <TextInput placeholder='Edit name...' onChangeText={this.changeEmail} style={{ borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.087)' }} disabled >{this.state.email}</TextInput>
                             </View>
                             <View style={{ flexDirection: 'row', marginTop: 15 }}>
                                 <TouchableOpacity style={{ backgroundColor: '#f3244d', flex: 1, marginRight: 10 }} onPress={() => this.refs.modal3.close()}>
-                                    <Text style={{color:' #fff', textAlign:' center', padding:10}}>Cancel</Text>
+                                    <Text style={{color:'#fff', textAlign:'center', padding:10}}>Cancel</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity style={{ backgroundColor: '#1f8cfa', flex: 1 }} onPress={this._updateProfile}>
                                     <Text style={{ color: '#fff', textAlign: 'center', padding: 10 }}>Done!</Text>
@@ -194,19 +226,14 @@ wrapper: {
   flex: 1
 },
 
-modal: {
-  justifyContent: 'center',
-  alignItems: 'center'
-},
-
 modal2: {
   height: 230,
   backgroundColor: "#3B5998"
 },
 
 modal3: {
-  height: 300,
-  width: 300
+  height: 480,
+  width: 350
 },
 
 modal4: {

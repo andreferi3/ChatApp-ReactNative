@@ -119,70 +119,70 @@ export default class Maps extends Component {
         })
     }
 
-    componentDidMount() {
-        navigator.geolocation.watchPosition(
-            position => {
-                this.setState({
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude
-                })
-                firebase.database().ref('users/' + User.uid + '/location').update({
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude
-                })
-            },
-            error => console.warn(error),
-            {
-                enableHighAccuracy: true,
-                timeout: 20000,
-                maximumAge: 1000,
-                distanceFilter: 10
-            }
-        );
-    }
+    // componentDidMount() {
+    //     navigator.geolocation.watchPosition(
+    //         position => {
+    //             this.setState({
+    //                 latitude: position.coords.latitude,
+    //                 longitude: position.coords.longitude
+    //             })
+    //             firebase.database().ref('users/' + User.uid + '/location').update({
+    //                 latitude: position.coords.latitude,
+    //                 longitude: position.coords.longitude
+    //             })
+    //         },
+    //         error => console.warn(error),
+    //         {
+    //             enableHighAccuracy: true,
+    //             timeout: 20000,
+    //             maximumAge: 1000,
+    //             distanceFilter: 10
+    //         }
+    //     );
+    // }
 
     onClosingState(state) {
         console.log('the open/close of the swipeToClose just changed');
     }
 
-    refresh = async () => {
-        let dbRef = firebase.database().ref('users');
-        dbRef.on('child_added', async (val) => {
-            let person = val.val();
-            person.uid = val.key;
-            if (person.uid === User.uid) {
-                User.name = person.name,
-                    User.phone = person.phone,
-                    User.avatar = person.avatar,
-                    User.email = person.email,
-                    User.data = {
-                        name: User.name,
-                        phone: User.phone,
-                        avatar: User.avatar,
-                        email: User.email
-                    }
-            } else {
-                let pos = {
-                    lat: person.location.latitude,
-                    lng: person.location.longitude
-                }
+    // refresh = async () => {
+    //     let dbRef = firebase.database().ref('users');
+    //     dbRef.on('child_added', async (val) => {
+    //         let person = val.val();
+    //         person.uid = val.key;
+    //         if (person.uid === User.uid) {
+    //             User.name = person.name,
+    //                 User.phone = person.phone,
+    //                 User.avatar = person.avatar,
+    //                 User.email = person.email,
+    //                 User.data = {
+    //                     name: User.name,
+    //                     phone: User.phone,
+    //                     avatar: User.avatar,
+    //                     email: User.email
+    //                 }
+    //         } else {
+    //             let pos = {
+    //                 lat: person.location.latitude,
+    //                 lng: person.location.longitude
+    //             }
 
-                await Geocoder.geocodePosition(pos).then(res => {
-                    firebase.database().ref('users/' + person.uid + '/location/city').set({
-                        name: res[0].locality
-                    })
-                })
-                .catch(error => alert(error))
+    //             await Geocoder.geocodePosition(pos).then(res => {
+    //                 firebase.database().ref('users/' + person.uid + '/location/city').set({
+    //                     name: res[0].locality
+    //                 })
+    //             })
+    //             .catch(error => alert(error))
 
-                this.setState((prevState) => {
-                    return {
-                        users: [...prevState.users, person],
-                        isLoading: false
-                    }
-                });
-            }
-        })
-    }
+    //             this.setState((prevState) => {
+    //                 return {
+    //                     users: [...prevState.users, person],
+    //                     isLoading: false
+    //                 }
+    //             });
+    //         }
+    //     })
+    // }
 
     componentWillUpdate() {
         let dbRef = firebase.database().ref('users/' + User.uid);
@@ -214,11 +214,12 @@ export default class Maps extends Component {
                         this.state.isLoading === true ? <ActivityIndicator size={'large'} style={{position:'absolute', top:0, bottom:0, left:0, right:0}} /> : 
 
                     <MapView
+                        ref={(mapView) => {_mapView = mapView}}
                         style={styles.map}
                         followsUserLocation={true}
                         showsMyLocationButton={true}
                         showsUserLocation={true}
-                        region={{
+                        initialRegion={{
                             latitude: this.state.latitude,
                             longitude: this.state.longitude,
                             latitudeDelta: 0.0043,
@@ -269,8 +270,13 @@ export default class Maps extends Component {
                             </View>
                         </TouchableOpacity>
                         <View style={{ flex: 1}}>
-                            <TouchableOpacity style={{ borderRadius: 50, alignItems:'center', marginBottom:20 }}>
-                                <Image source={require('../assets/icon/location.png')} style={{ width: 30, height: 30 }} />
+                            <TouchableOpacity style={{ borderRadius: 50, alignItems:'center', marginBottom:20 }} onPress={() => _mapView.animateToRegion({
+                                latitude: this.state.latitude,
+                                longitude: this.state.longitude,
+                                latitudeDelta: 0.0043,
+                                longitudeDelta: 0.0034
+                            }, 1000)}>
+                                <Image source={require('../assets/icon/target.png')} style={{ width: 30, height: 30 }} />
                             </TouchableOpacity>
                             <TouchableOpacity style={{alignItems:'center', justifyContent:'center'}} onPress={() => this.refs.modal6.open()}>
                                 <FlatList 
@@ -311,7 +317,12 @@ export default class Maps extends Component {
                                 keyExtractor={(item, index) => index.toString()}
                                 renderItem={({item, index}) => {
                                     return (
-                                        <TouchableOpacity style={{flex:1, marginRight:10, marginTop:10}}>
+                                        <TouchableOpacity style={{flex:1, marginRight:10, marginTop:10}} onPress={() => _mapView.animateToRegion({
+                                            latitude: item.location.latitude,
+                                            longitude: item.location.longitude,
+                                            latitudeDelta: 0.0043,
+                                            longitudeDelta: 0.0034
+                                        }, 1000)}>
                                             <View style={{backgroundColor:'#fff', width:100, alignItems:'center', elevation:5, padding:10}}>
                                                 <Image source={{uri:item.avatar}} style={{height:80, width:80, borderRadius:50}} />
                                                 <Text numberOfLines={2} style={{textAlign:'center', marginTop:5, color: '#2e373c', fontFamily: 'sans-serif-medium'}}>{item.name}</Text>
