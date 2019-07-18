@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, ScrollView, FlatList } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, ScrollView, FlatList, ActivityIndicator } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import firebase from 'firebase';
 import User from '../../User';
@@ -64,9 +64,85 @@ export default class Maps extends Component {
         )
     }
 
-    componentWillMount() {
+    async componentWillMount() {
         let dbRef = firebase.database().ref('users');
-        dbRef.on('child_added', (val) => {
+        dbRef.on('child_added', async (val) => {
+            let person = val.val();
+            person.uid = val.key;
+            if (person.uid === User.uid) {
+                User.name = person.name;
+                User.phone = person.phone;
+                User.avatar = person.avatar;
+                User.email = person.email;
+                User.data = {
+                    name: User.name,
+                    phone: User.phone,
+                    avatar: User.avatar,
+                    email: User.email
+                };
+                let pos = {
+                    lat: person.location.latitude,
+                    lng: person.location.longitude
+                }
+
+                await Geocoder.geocodePosition(pos).then(res => {
+                    firebase.database().ref('users/' + person.uid + '/location/city').set({
+                        name: res[0].locality
+                    })
+                })
+                .catch(error => alert(error))
+                
+            } else {
+                let pos = {
+                    lat: person.location.latitude,
+                    lng: person.location.longitude
+                }
+
+                await Geocoder.geocodePosition(pos).then(res => {
+                    firebase.database().ref('users/' + person.uid + '/location/city').set({
+                        name: res[0].locality
+                    })
+                })
+                .catch(error => alert(error))
+
+                this.setState((prevState) => {
+                    return {
+                        users: [...prevState.users, person]
+                    }
+                });
+            }
+        })
+    }
+
+    componentDidMount() {
+        navigator.geolocation.watchPosition(
+            position => {
+                this.setState({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                })
+                firebase.database().ref('users/' + User.uid + '/location').set({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                })
+            },
+            error => console.warn(error),
+            {
+                enableHighAccuracy: true,
+                timeout: 20000,
+                maximumAge: 1000,
+                distanceFilter: 10
+            }
+        );
+    }
+
+    onClosingState(state) {
+        console.log('the open/close of the swipeToClose just changed');
+    }
+
+    refresh = async () => {
+        let dbRef = firebase.database().ref('users');
+        dbRef.on('child_added', async (val) => {
             let person = val.val();
             person.uid = val.key;
             if (person.uid === User.uid) {
@@ -81,58 +157,35 @@ export default class Maps extends Component {
                         email: User.email
                     }
             } else {
-                this.setState((prevState) => {
-                    return {
-                        users: [...prevState.users, person]
-                    }
-                });
-
                 let pos = {
                     lat: person.location.latitude,
                     lng: person.location.longitude
                 }
 
-                Geocoder.geocodePosition(pos).then(res => {
+                await Geocoder.geocodePosition(pos).then(res => {
                     firebase.database().ref('users/' + person.uid + '/location/city').set({
                         name: res[0].locality
                     })
                 })
                 .catch(error => alert(error))
+
+                this.setState((prevState) => {
+                    return {
+                        users: [...prevState.users, person],
+                        isLoading: false
+                    }
+                });
             }
         })
     }
 
-    // componentDidMount() {
-    //     navigator.geolocation.watchPosition(
-    //         position => {
-    //             this.setState({
-    //                 latitude: position.coords.latitude,
-    //                 longitude: position.coords.longitude
-    //             })
-    //             firebase.database().ref('users/' + User.uid + '/location').set({
-    //                 latitude: position.coords.latitude,
-    //                 longitude: position.coords.longitude
-    //             })
-    //         },
-    //         error => console.warn(error),
-    //         {
-    //             enableHighAccuracy: true,
-    //             timeout: 20000,
-    //             maximumAge: 1000,
-    //             distanceFilter: 10
-    //         }
-    //     );
-    // }
-
-    onClosingState(state) {
-        console.log('the open/close of the swipeToClose just changed');
-    }
-
     render() {
-        console.warn(this.state.friendLocation.city);
         return (
             <React.Fragment>
                 <View style={styles.container}>
+                    {
+                        this.state.isLoading === true ? <ActivityIndicator size={'large'} style={{position:'absolute', top:0, bottom:0, left:0, right:0}} /> : 
+
                     <MapView
                         style={styles.map}
                         showsMyLocationButton={true}
@@ -169,6 +222,7 @@ export default class Maps extends Component {
                         }
 
                     </MapView>
+                    }
                 </View>
                 
                 {
@@ -232,7 +286,7 @@ export default class Maps extends Component {
                                             <View style={{backgroundColor:'#fff', width:100, alignItems:'center', elevation:5, padding:10}}>
                                                 <Image source={{uri:item.avatar}} style={{height:80, width:80, borderRadius:50}} />
                                                 <Text numberOfLines={2} style={{textAlign:'center', marginTop:5, color: '#2e373c', fontFamily: 'sans-serif-medium'}}>{item.name}</Text>
-                                                <Text style={{textAlign:'center'}}>{item.location.city.name}</Text>
+                                                <Text style={{textAlign:'center'}}>{item.location.city.name === undefined ? null : item.location.city.name}</Text>
                                             </View>
                                         </TouchableOpacity>
                                     )
@@ -241,6 +295,10 @@ export default class Maps extends Component {
                         </View>
                     </ScrollView>
                 </Modal>
+
+                <TouchableOpacity style={{position:'absolute', top:0, left:0, backgroundColor:'#fff', padding:6, elevation:5, marginTop:10, marginLeft:10}} onPress={this.refresh}>
+                    <Image source={require('../assets/icon/refresh.png')} style={{width:25, height:25}} />
+                </TouchableOpacity>
             </React.Fragment>
         )
     }
