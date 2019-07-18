@@ -28,7 +28,6 @@ export default class Dashboard extends Component {
         dbRef.on('child_added', (val) => {
             let person = val.val();
             person.uid = val.key;
-            console.warn(person);
             this.setState((prevState) => {
                 return {
                     users: [...prevState.users, person]

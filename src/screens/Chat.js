@@ -40,8 +40,8 @@ export default class Chat extends Component {
         let c = new Date();
         let result = (d.getHours() < 10 ? '0' : '') + d.getHours() + ':';
         result += (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
-        if(c.getDay() !== d.getDay()) {
-            result = d.getDay() + ' '  + d.getMonth() + ' ' + result;
+        if (c.getDay() !== d.getDay()) {
+            result = d.getDay() + ' ' + d.getMonth() + ' ' + result;
         }
         return result;
     }
@@ -87,23 +87,23 @@ export default class Chat extends Component {
         }
     }
 
-    renderMessage = ({item}) => {
+    renderMessage = ({ item }) => {
         return (
             <View style={{
-                flexDirection:'row',
-                width:'60%',
-                alignSelf:item.from===User.phone ? 'flex-end' : 'flex-start',
-                backgroundColor: item.from===User.phone ? '#00897b' : '#7cb342',
-                borderRadius:10,
-                marginBottom:10
+                flexDirection: 'row',
+                width: '60%',
+                alignSelf: item.from === User.phone ? 'flex-end' : 'flex-start',
+                backgroundColor: item.from === User.phone ? '#00897b' : '#7cb342',
+                borderRadius: 10,
+                marginBottom: 10
             }}>
-                <View style={{flex:5.2}}>
-                    <Text style={{color:'#fff', padding:10}}>
+                <View style={{ flex: 5.2 }}>
+                    <Text style={{ color: '#fff', padding: 10 }}>
                         {item.message}
                     </Text>
                 </View>
-                <View style={{flex:1, alignItems:'flex-end', justifyContent:'flex-start', paddingTop:10, paddingRight:10}}>
-                    <Text style={{color:'#eee', padding:3, fontSize:12}}>{this.convertTime(item.time)}</Text>
+                <View style={{ flex: 1, alignItems: 'flex-end', justifyContent: 'flex-start', paddingTop: 2, paddingRight: 10 }}>
+                    <Text style={{ color: '#eee', padding: 3, fontSize: 10 }}>{this.convertTime(item.time)}</Text>
                 </View>
             </View>
         )
@@ -114,17 +114,19 @@ export default class Chat extends Component {
             <React.Fragment>
                 <FlatList
                     data={this.state.messageList}
+                    ref="flatList"
+                    onContentSizeChange={() => this.refs.flatList.scrollToEnd()}
                     renderItem={this.renderMessage}
                     keyExtractor={(item, index) => index.toString()}
-                    style={{marginTop:10,padding:10}} />
+                    style={{ marginTop: 10, padding: 10, flex:1 }} />
 
-                <View style={{ flexDirection: 'row', paddingHorizontal: 10, marginBottom: 5, alignItems:'center', margin:10 }}>
+                <View style={{ flexDirection: 'row', paddingHorizontal: 10, marginBottom: 5, alignItems: 'center', margin: 10 }}>
                     <View style={{ flex: 4, borderWidth: 1, borderColor: '#2174DB', borderRadius: 20, paddingLeft: 15 }}>
                         <TextInput placeholder='Input message...' value={this.state.textMessage} onChangeText={this.handleChange('textMessage')} multiline={true} />
                     </View>
-                    <View style={{ flex: 1, alignItems:'center'}}>
-                        <TouchableOpacity onPress={this.sendMessage} style={{backgroundColor:'#2174DB', padding:10, borderRadius:50}}>
-                            <Image source={require('../assets/icon/right-arrow.png')} />
+                    <View style={{ flex: 1, alignItems: 'center' }}>
+                        <TouchableOpacity onPress={this.sendMessage} style={{ backgroundColor: '#2174DB', padding: 10, borderRadius: 50 }}>
+                            <Image source={require('../assets/icon/right-arrow.png')} style={{width:25, height:25}} />
                         </TouchableOpacity>
                     </View>
                 </View>
