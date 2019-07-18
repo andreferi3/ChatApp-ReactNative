@@ -74,23 +74,28 @@ export default class Maps extends Component {
                 User.phone = person.phone;
                 User.avatar = person.avatar;
                 User.email = person.email;
+                User.latitude = person.location.latitude;
+                User.longtitude = person.location.longitude;
                 User.data = {
                     name: User.name,
                     phone: User.phone,
                     avatar: User.avatar,
                     email: User.email
                 };
-                let pos = {
-                    lat: person.location.latitude,
-                    lng: person.location.longitude
-                }
+                // let pos = {
+                //     lat: person.location.latitude,
+                //     lng: person.location.longitude
+                // }
 
-                await Geocoder.geocodePosition(pos).then(res => {
-                    firebase.database().ref('users/' + person.uid + '/location/city').set({
-                        name: res[0].locality
-                    })
-                })
-                .catch(error => alert(error))
+                // await Geocoder.geocodePosition(pos).then(res => {
+                //     firebase.database().ref('users/' + person.uid + '/location/city').update({
+                //         name: res[0].locality
+                //     })
+                // })
+                // .catch(
+                //     (error) => 
+                //         alert(error)
+                //     )
                 
             } else {
                 let pos = {
@@ -121,7 +126,7 @@ export default class Maps extends Component {
                     latitude: position.coords.latitude,
                     longitude: position.coords.longitude
                 })
-                firebase.database().ref('users/' + User.uid + '/location').set({
+                firebase.database().ref('users/' + User.uid + '/location').update({
                     latitude: position.coords.latitude,
                     longitude: position.coords.longitude
                 })
@@ -179,6 +184,28 @@ export default class Maps extends Component {
         })
     }
 
+    componentWillUpdate() {
+        let dbRef = firebase.database().ref('users/' + User.uid);
+        dbRef.on('value', (val) => {
+            let person = val.val();
+            person.uid = val.key;
+            let pos = {
+                lat: person.location.latitude,
+                lng: person.location.longitude
+            }
+            
+            Geocoder.geocodePosition(pos).then(res => {
+                firebase.database().ref('users/' + person.uid + '/location/city').update({
+                    name: res[0].locality
+                })
+            })
+            .catch(
+                (error) => 
+                alert(error)
+                )
+        })
+    }
+
     render() {
         return (
             <React.Fragment>
@@ -188,6 +215,7 @@ export default class Maps extends Component {
 
                     <MapView
                         style={styles.map}
+                        followsUserLocation={true}
                         showsMyLocationButton={true}
                         showsUserLocation={true}
                         region={{
@@ -207,9 +235,10 @@ export default class Maps extends Component {
                             }} />
 
                         {
-                            this.state.users.map(data => (
+                            this.state.users.map((data, i) => (
                                 <Marker
                                     title={data.name}
+                                    key={i}
                                     coordinate={{
                                         latitude: data.location.latitude,
                                         longitude: data.location.longitude,

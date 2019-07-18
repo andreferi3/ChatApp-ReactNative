@@ -10,8 +10,8 @@ import {
   Image,
   StatusBar,
   Alert,
-  DatePickerAndroid,
-  AsyncStorage
+  AsyncStorage,
+  ActivityIndicator
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import styles from '../constants/styles';
@@ -32,24 +32,10 @@ export default class Register extends Component {
       errName: false,
       errAge: false,
       errEmail: false,
-      errPassword: false
+      errPassword: false,
+      isLoading: false
     }
   }
-
-  // datePicker = async () => {
-  //   try {
-  //     const { action, year, month, day } = await DatePickerAndroid.open({
-  //       date: new Date(),
-  //     });
-  //     if (action == DatePickerAndroid.dateSetAction) {
-  //       this.setState({
-  //         date: `${day}/${month + 1}/${year}`
-  //       })
-  //     }
-  //   } catch ({ code, message }) {
-  //     console.warn('Cannot open date picker', message);
-  //   }
-  // }
 
   validate = () => {
     if (this.state.phone.length < 10) {
@@ -79,30 +65,39 @@ export default class Register extends Component {
     User.name = this.state.name;
     let email = this.state.email;
     let password = this.state.password;
-    console.warn('Masuk pa ekoo')
-    await firebase.auth().createUserWithEmailAndPassword(email, password)
-    .then(
-      ({user}) => firebase.database().ref('users/' + user.uid).set({
-        email: this.state.email,
-        name: this.state.name,
-        password: this.state.password,
-        phone: this.state.phone,
-        avatar: this.state.image
-      })
-    )
-    .catch(error => {
-      let errorCode = error.code;
-      let errorMessage = error.message;
-      if(errorCode == 'auth/weak-password') {
-        alert('The password is too weak');
-      } else {
-        alert(errorMessage);
-      }
+    this.setState({
+      isLoading: true
     })
+    await firebase.auth().createUserWithEmailAndPassword(email, password)
+      .then(
+        ({ user }) =>
+          firebase.database().ref('users/' + user.uid).set({
+            email: this.state.email,
+            name: this.state.name,
+            password: this.state.password,
+            phone: this.state.phone,
+            avatar: this.state.image == '' ? 'http://www.thesanctuaryinstitute.org/wp-content/uploads/2018/07/missing-image-avatar.png' : this.state.image
+          })
+      )
+      .catch(error => {
+        let errorCode = error.code;
+        let errorMessage = error.message;
+        this.setState({
+          isLoading: false
+        })
+        if (errorCode == 'auth/weak-password') {
+          alert('The password is too weak');
+        } else {
+          alert(errorMessage);
+        }
+      })
     this.props.navigation.navigate('Login');
     Alert.alert(
       'Register Successful!'
     )
+    this.setState({
+      isLoading: false
+    })
   }
 
   changeName = val => {
@@ -133,7 +128,7 @@ export default class Register extends Component {
       return false;
     }
     else {
-      this.setState({ 
+      this.setState({
         email: text,
         errEmail: false
       })
@@ -142,12 +137,11 @@ export default class Register extends Component {
 
   changeImage = val => {
     this.setState({
-      image: val.slice(0,4) !== 'http' ? 'http://www.thesanctuaryinstitute.org/wp-content/uploads/2018/07/missing-image-avatar.png' : val
+      image: val.slice(0, 4) !== 'http' || val == '' ? 'http://www.thesanctuaryinstitute.org/wp-content/uploads/2018/07/missing-image-avatar.png' : val
     })
   }
 
   render() {
-    console.warn(this.state.image);
     return (
       <React.Fragment>
         <StatusBar hidden />
@@ -164,6 +158,10 @@ export default class Register extends Component {
 
             <Text style={styles.textLogo}>Chat Kuy</Text>
 
+            {
+              this.state.isLoading === true ? <ActivityIndicator size={'large'} /> : null
+            }
+
             <TextInput style={styles.textInput} placeholder='Enter your name...' onChangeText={this.changeName} />
             {
               this.state.errName !== false ? <Text style={{ marginTop: 10, marginLeft: 5, color: '#ff0000' }}>{this.state.errName}</Text> : null
@@ -177,7 +175,7 @@ export default class Register extends Component {
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
               <TextInput style={[styles.textInput, { width: '80%' }]} placeholder='Image url...' onChangeText={this.changeImage} />
               <View style={{ borderRadius: 50, marginLeft: 9 }}>
-                <Image source={{uri: this.state.image.slice(0,4) !== 'http' ? 'http://www.thesanctuaryinstitute.org/wp-content/uploads/2018/07/missing-image-avatar.png' : this.state.image}} style={{width:45, height:45, borderRadius:50}} />
+                <Image source={{ uri: this.state.image.slice(0, 4) !== 'http' ? 'http://www.thesanctuaryinstitute.org/wp-content/uploads/2018/07/missing-image-avatar.png' : this.state.image }} style={{ width: 45, height: 45, borderRadius: 50 }} />
               </View>
             </View>
             {
@@ -194,11 +192,19 @@ export default class Register extends Component {
               this.state.errPassword !== false ? <Text style={{ marginTop: 10, marginLeft: 5, color: '#ff0000' }}>{this.state.errPassword}</Text> : null
             }
 
-            <TouchableOpacity style={styles.flexRow} onPress={this.validate}>
-              <View style={styles.button}>
-                <Text style={styles.textButton}>Register</Text>
-              </View>
-            </TouchableOpacity>
+            {
+              this.state.isLoading == true ?
+                <TouchableOpacity style={styles.flexRow} onPress={this.validate} disabled>
+                  <View style={styles.button}>
+                    <Text style={styles.textButton}>Register</Text>
+                  </View>
+                </TouchableOpacity> : 
+                <TouchableOpacity style={styles.flexRow} onPress={this.validate}>
+                <View style={styles.button}>
+                  <Text style={styles.textButton}>Register</Text>
+                </View>
+              </TouchableOpacity>
+            }
 
             <View style={{ flexDirection: 'row', marginTop: 30, alignItems: 'center', justifyContent: 'center' }}>
               <Image source={require('../assets/icon/facebook.png')} style={{ width: 35, height: 35, marginLeft: 15 }} />
