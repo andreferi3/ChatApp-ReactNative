@@ -6,6 +6,7 @@ import AuthLoadingScreen from '../screens/AuthLoadingScreen';
 import Chat from '../screens/Chat';
 import Profile from '../screens/Profile';
 import Maps from '../screens/Maps';
+import FriendProfile from '../screens/FriendProfile';
 
 // Implementation of HomeScreen, OtherScreen, SignInScreen, AuthLoadingScreen
 // goes here.
@@ -25,6 +26,9 @@ const AppStack = createStackNavigator({
   },
   Maps: {
     screen: Maps
+  },
+  FriendProfile: {
+    screen: FriendProfile
   }
 }, {
   initialRouteName: 'Maps'

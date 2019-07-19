@@ -19,6 +19,8 @@ export default class Login extends Component {
   constructor() {
     super();
 
+    this.getUserLocation();    
+
     this.state = {
       email: '',
       password: '',
@@ -28,6 +30,21 @@ export default class Login extends Component {
     }
   }
 
+  async getUserLocation() {
+    await navigator.geolocation.getCurrentPosition(
+        (position) => {
+            this.setState({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude
+            })
+        },
+        (error) => {
+            console.warn('Error ' + error.message)
+        },
+        { enableHighAccuracy: true, maximumAge: 1000, timeout: 200000 }
+    )
+  }
+
   validate = async () => {
     if (this.state.password.length < 6) {
       this.setState({ errPassword: 'Too short!' })
@@ -35,7 +52,6 @@ export default class Login extends Component {
       this.setState({ errPassword: true })
     }
     if (this.state.errEmail != false && this.state.errPassword != false) {
-      await AsyncStorage.setItem('userEmail', this.state.email);
       this.login()
     }
   }
@@ -54,6 +70,8 @@ export default class Login extends Component {
       .then(async ({ user }) => {
         User.uid = user.uid;
         User.email = this.state.email;
+        firebase.database().ref('users/'+user.uid).update({status:"Online"})
+        await AsyncStorage.setItem('userEmail', this.state.email);
         await AsyncStorage.setItem('userId', user.uid);
         this.props.navigation.navigate('App');
         this.setState({isLoading:false})

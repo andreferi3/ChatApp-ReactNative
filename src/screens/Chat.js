@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, Dimensions, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, Image, KeyboardAvoidingView } from 'react-native';
 import firebase from 'firebase';
 import User from '../../User';
 
@@ -7,7 +7,7 @@ export default class Chat extends Component {
 
     static navigationOptions = ({ navigation }) => {
         return {
-            title: navigation.getParam('name', null)
+            title: navigation.state.params.name
         }
     }
 
@@ -17,9 +17,9 @@ export default class Chat extends Component {
         this.state = {
             messageList: [],
             person: {
-                uid: props.navigation.getParam('uid'),
-                name: props.navigation.getParam('name'),
-                avatar: props.navigation.getParam('avatar')
+                uid: this.props.navigation.state.params.uid,
+                name: this.props.navigation.state.params.name,
+                avatar: this.props.navigation.state.params.avatar
             },
             textMessage: ''
         }

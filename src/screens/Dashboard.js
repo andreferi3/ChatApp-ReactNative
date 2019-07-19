@@ -3,7 +3,7 @@ import {
     View,
     Text,
     TouchableOpacity,
-    AsyncStorage,
+    Modal,
     FlatList,
     Image
 } from 'react-native';
@@ -17,6 +17,7 @@ export default class Dashboard extends Component {
         super()
 
         this.state = {
+            modalVisible: false,
             users: [],
             email: [],
             phone: ''
@@ -62,16 +63,36 @@ export default class Dashboard extends Component {
         return result;
     }
 
-    logout = async () => {
-        await AsyncStorage.clear();
-        this.props.navigation.navigate('Auth');
+    setModalVisible(visible, data) {
+        if (data == undefined) {
+            this.setState({ modalVisible: visible })
+        } else {
+            this.setState({
+                modalVisible: visible,
+                friendAvatar: data.avatar,
+                friendName: data.name,
+                friendPhone: data.phone,
+                friendEmail: data.email,
+                friendUid: data.uid,
+                item: [
+                    {
+                        name: data.name,
+                        phone: data.phone,
+                        email: data.email,
+                        avatar: data.avatar
+                    }
+                ]
+            })
+        }
     }
 
     _renderItem = ({ item }) => {
         return (
-            <TouchableOpacity onPress={() => this.props.navigation.navigate('Chat', item)} style={{ marginBottom: 20 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Image source={{ uri: item.avatar }} style={{ width: 50, height: 50, borderRadius: 50 }} />
+            <View style={{ marginBottom: 20 }}>
+                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => this.props.navigation.navigate('Chat', item)}>
+                    <TouchableOpacity onPress={() => {this.setModalVisible(true, item)}}>
+                        <Image source={{ uri: item.avatar }} style={{ width: 50, height: 50, borderRadius: 50 }} />
+                    </TouchableOpacity>
                     <View style={{ padding: 10, flex: 3 }}>
                         <Text style={{ fontSize: 23, color: '#f1f1f1', fontFamily: 'sans-serif-medium', fontWeight: 'bold' }}>{item.name}</Text>
                         <Text style={{ fontFamily: 'sans-serif-light', fontSize: 16, fontWeight: '600' }} numberOfLines={1}>Kamu : {item.messageText}</Text>
@@ -79,8 +100,8 @@ export default class Dashboard extends Component {
                     <View style={{ padding: 10, flex: 1, justifyContent: 'center', alignItems: 'flex-end' }}>
                         <Text style={{ color: '#f1f1f1', fontSize: 11, fontFamily: 'sans-serif-medium' }}>{this.convertTime(item.time)}</Text>
                     </View>
-                </View>
-            </TouchableOpacity>
+                </TouchableOpacity>
+            </View>
         )
     }
 
@@ -97,6 +118,43 @@ export default class Dashboard extends Component {
                         data={this.state.users}
                         keyExtractor={(item) => item.uid}
                         renderItem={this._renderItem} />
+
+                    <Modal
+                        animationType="fade"
+                        transparent={true}
+                        visible={this.state.modalVisible}
+                        onRequestClose={() => {
+                            this.setModalVisible(!this.state.modalVisible);
+                        }}
+                    >
+                        <TouchableOpacity style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }} onPress={() => this.setModalVisible(!this.state.modalVisible)}>
+                            <View style={{ backgroundColor: '#fff', height: 370, width: 300 }}>
+                                <View style={{ flex: 1, alignItems: 'center' }}>
+                                    <Image source={{ uri: this.state.friendAvatar }} style={{ height: 300, width: 300 }} />
+                                    <View style={{ flexDirection: 'row', flex: 1 }}>
+                                        <TouchableOpacity style={{ flex: 1, justifyContent: 'center', padding: 20, alignItems: 'center' }} onPress={() => this.props.navigation.navigate('Chat', {
+                                            name: this.state.friendName,
+                                            phone: this.state.friendPhone,
+                                            avatar: this.state.friendAvatar,
+                                            email: this.state.email,
+                                            uid: this.state.friendUid
+                                        }) & this.setModalVisible(!this.state.modalVisible)}>
+                                            <Image source={require('../assets/icon/chatb.png')} style={{ height: 40, width: 40 }} />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity style={{ flex: 1, justifyContent: 'center', padding: 20, alignItems: 'center' }} onPress={() => alert('Coming soon!')}>
+                                            <Image source={require('../assets/icon/call.png')} style={{ height: 40, width: 40 }} />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity style={{ flex: 1, justifyContent: 'center', padding: 20, alignItems: 'center' }} onPress={() => this.props.navigation.navigate('FriendProfile', {
+                                            uid: this.state.friendUid,
+                                            name: this.state.friendName
+                                        }) & this.setModalVisible(!this.state.modalVisible)}>
+                                            <Image source={require('../assets/icon/info.png')} style={{ height: 35, width: 35 }} />
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </View>
+                        </TouchableOpacity>
+                    </Modal>
                 </LinearGradient>
 
                 <LinearGradient
@@ -108,9 +166,6 @@ export default class Dashboard extends Component {
                         <View style={{ flex: 1 }}>
                             <Text style={{ fontSize: 23, color: '#f1f1f1', fontFamily: 'sans-serif-medium', fontWeight: 'bold' }}>Chat Room</Text>
                         </View>
-                        <TouchableOpacity style={{ flex: 1, alignItems: 'flex-end' }} onPress={this.logout}>
-                            <Text style={{ fontSize: 23, color: '#f1f1f1', fontFamily: 'sans-serif-medium', fontWeight: 'bold' }}>Logout</Text>
-                        </TouchableOpacity>
                     </View>
                 </LinearGradient>
 

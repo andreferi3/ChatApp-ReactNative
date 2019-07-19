@@ -6,7 +6,8 @@ const User = {
     avatar: null,
     uid: null,
     latitude: null,
-    longtitude: null
+    longtitude: null,
+    friendLocation: []
 }
 
 export default User;

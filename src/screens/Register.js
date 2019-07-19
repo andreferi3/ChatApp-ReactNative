@@ -21,6 +21,8 @@ export default class Register extends Component {
   constructor() {
     super();
 
+    this.getUserLocation();    
+
     this.state = {
       phone: '',
       image: '',
@@ -28,6 +30,8 @@ export default class Register extends Component {
       password: '',
       email: '',
       image: '',
+      latitude: 0,
+      longitude: 0,
       errPhone: false,
       errName: false,
       errAge: false,
@@ -35,6 +39,21 @@ export default class Register extends Component {
       errPassword: false,
       isLoading: false
     }
+  }
+
+  async getUserLocation() {
+    await navigator.geolocation.getCurrentPosition(
+        (position) => {
+            this.setState({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude
+            })
+        },
+        (error) => {
+            console.warn('Error ' + error.message)
+        },
+        { enableHighAccuracy: true, maximumAge: 1000, timeout: 200000 }
+    )
   }
 
   validate = () => {
@@ -59,7 +78,6 @@ export default class Register extends Component {
   }
 
   register = async () => {
-    await AsyncStorage.setItem('userEmail', this.state.email);
     User.email = this.state.email;
     User.phone = this.state.phone;
     User.name = this.state.name;
@@ -72,32 +90,43 @@ export default class Register extends Component {
       .then(
         ({ user }) =>
           firebase.database().ref('users/' + user.uid).set({
+            about: "-",
+            status: "offline",
             email: this.state.email,
             name: this.state.name,
             password: this.state.password,
             phone: this.state.phone,
-            avatar: this.state.image == '' ? 'http://www.thesanctuaryinstitute.org/wp-content/uploads/2018/07/missing-image-avatar.png' : this.state.image
+            avatar: this.state.image == '' ? 'http://www.thesanctuaryinstitute.org/wp-content/uploads/2018/07/missing-image-avatar.png' : this.state.image,
+            location: {
+              latitude: this.state.latitude,
+              longitude: this.state.longitude,
+              city: {
+                name: ""
+              }
+            }
           })
       )
+      .then(() => {
+        this.props.navigation.navigate('Login');
+          Alert.alert(
+            'Register Successful!'
+          )
+          this.setState({
+            isLoading: false
+          })
+      })
       .catch(error => {
         let errorCode = error.code;
         let errorMessage = error.message;
         this.setState({
           isLoading: false
-        })
+        });
         if (errorCode == 'auth/weak-password') {
           alert('The password is too weak');
         } else {
           alert(errorMessage);
         }
       })
-    this.props.navigation.navigate('Login');
-    Alert.alert(
-      'Register Successful!'
-    )
-    this.setState({
-      isLoading: false
-    })
   }
 
   changeName = val => {

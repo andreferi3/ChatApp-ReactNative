@@ -3,7 +3,7 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, ScrollView
 import LinearGradient from 'react-native-linear-gradient';
 import firebase from 'firebase';
 import User from '../../User';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Modal from 'react-native-modalbox';
 import Geocoder from 'react-native-geocoder';
 
@@ -20,9 +20,8 @@ export default class Maps extends Component {
     constructor(props) {
         super(props);
 
-        this.getUserLocation();
-
         this.state = {
+            data: [],
             users: [],
             email: '',
             isLoading: false,
@@ -30,19 +29,28 @@ export default class Maps extends Component {
             isDisabled: false,
             swipeToClose: true,
             sliderValue: 0.3,
-            // latitude: LATITUDE,
-            // longtitude: LONGTITUDE,
-            // routeCoordinates: [],
-            // distanceTraveled: 0,
-            // prevLatLng: {},
-            // coordinate: new AnimatedRegion({
-            //     latitude: LATITUDE,
-            //     longitude: LONGTITUDE
-            // })
             longitude: 0,
             latitude: 0,
-            friendLocation: {}
+            friendLocation: {},
+            name: '',
+            email: '',
+            phone: '',
+            debug: []
         }
+
+        this.getUserLocation();
+        this.getAllUser();
+    }
+
+    async getAllUser() {
+        let dbRef = firebase.database().ref('users');
+        dbRef.on('child_changed', (val) => {
+            this.setState((prevState) => {
+                return {
+                    data: [...prevState.data, val.val()]
+                }
+            })
+        })
     }
 
     async getUserLocation() {
@@ -52,7 +60,7 @@ export default class Maps extends Component {
                     latitude: position.coords.latitude,
                     longitude: position.coords.longitude
                 })
-                firebase.database().ref('users/' + User.uid + '/location').set({
+                firebase.database().ref('users/' + User.uid + '/location').update({
                     latitude: position.coords.latitude,
                     longitude: position.coords.longitude
                 })
@@ -82,41 +90,46 @@ export default class Maps extends Component {
                     avatar: User.avatar,
                     email: User.email
                 };
-                // let pos = {
-                //     lat: person.location.latitude,
-                //     lng: person.location.longitude
-                // }
-
-                // await Geocoder.geocodePosition(pos).then(res => {
-                //     firebase.database().ref('users/' + person.uid + '/location/city').update({
-                //         name: res[0].locality
-                //     })
-                // })
-                // .catch(
-                //     (error) => 
-                //         alert(error)
-                //     )
-                
-            } else {
                 let pos = {
                     lat: person.location.latitude,
                     lng: person.location.longitude
                 }
 
                 await Geocoder.geocodePosition(pos).then(res => {
-                    firebase.database().ref('users/' + person.uid + '/location/city').set({
+                    firebase.database().ref('users/' + person.uid + '/location/city').update({
                         name: res[0].locality
                     })
                 })
-                .catch(error => alert(error))
-
+                .catch(
+                    (error) => 
+                        alert(error)
+                    )
+                firebase.database().ref('users/'+User.uid).update({status:'Online'});
+                firebase.database().ref('users/'+User.uid).onDisconnect().update({status:'Offline'});
+            } else {
                 this.setState((prevState) => {
                     return {
                         users: [...prevState.users, person]
                     }
                 });
+
+                let pos = {
+                    lat: person.location.latitude,
+                    lng: person.location.longitude
+                }
+
+                await Geocoder.geocodePosition(pos).then(res => {
+                    firebase.database().ref('users/' + person.uid + '/location/city').update({
+                        name: res[0].locality
+                    })
+                })
+                .catch(error => alert(error))
             }
         })
+    }
+
+    onClosingState(state) {
+        console.log('the open/close of the swipeToClose just changed');
     }
 
     // componentDidMount() {
@@ -126,7 +139,7 @@ export default class Maps extends Component {
     //                 latitude: position.coords.latitude,
     //                 longitude: position.coords.longitude
     //             })
-    //             firebase.database().ref('users/' + User.uid + '/location').update({
+    //             firebase.database().ref('users/' + User.uid + '/location').set({
     //                 latitude: position.coords.latitude,
     //                 longitude: position.coords.longitude
     //             })
@@ -140,10 +153,6 @@ export default class Maps extends Component {
     //         }
     //     );
     // }
-
-    onClosingState(state) {
-        console.log('the open/close of the swipeToClose just changed');
-    }
 
     // refresh = async () => {
     //     let dbRef = firebase.database().ref('users');
@@ -184,28 +193,6 @@ export default class Maps extends Component {
     //     })
     // }
 
-    componentWillUpdate() {
-        let dbRef = firebase.database().ref('users/' + User.uid);
-        dbRef.on('value', (val) => {
-            let person = val.val();
-            person.uid = val.key;
-            let pos = {
-                lat: person.location.latitude,
-                lng: person.location.longitude
-            }
-            
-            Geocoder.geocodePosition(pos).then(res => {
-                firebase.database().ref('users/' + person.uid + '/location/city').update({
-                    name: res[0].locality
-                })
-            })
-            .catch(
-                (error) => 
-                alert(error)
-                )
-        })
-    }
-
     render() {
         return (
             <React.Fragment>
@@ -216,38 +203,36 @@ export default class Maps extends Component {
                     <MapView
                         ref={(mapView) => {_mapView = mapView}}
                         style={styles.map}
-                        followsUserLocation={true}
                         showsMyLocationButton={true}
                         showsUserLocation={true}
                         initialRegion={{
-                            latitude: this.state.latitude,
-                            longitude: this.state.longitude,
+                            latitude: this.state.latitude || -7.75850555,
+                            longitude: this.state.longitude || 110.37815382,
                             latitudeDelta: 0.0043,
                             longitudeDelta: 0.0034
                         }}
                     >
                         <Marker
                             title={User.name}
+                            description={User.email}
                             coordinate={{
                                 latitude: this.state.latitude,
                                 longitude: this.state.longitude,
                                 latitudeDelta: 0.0043,
                                 longitudeDelta: 0.0034
                             }} />
-
                         {
-                            this.state.users.map((data, i) => (
+                            this.state.users.map((data) => (
                                 <Marker
                                     title={data.name}
-                                    key={i}
+                                    description={data.email}
+                                    key={data.uid}
                                     coordinate={{
                                         latitude: data.location.latitude,
                                         longitude: data.location.longitude,
                                         latitudeDelta: 0.0043,
                                         longitudeDelta: 0.0034
-                                    }}>
-                                    <Image source={{ uri: data.avatar }} style={{ width: 50, height: 50, borderRadius: 50 }} />
-                                </Marker>
+                                    }} />
                             ))
                         }
 
@@ -326,7 +311,7 @@ export default class Maps extends Component {
                                             <View style={{backgroundColor:'#fff', width:100, alignItems:'center', elevation:5, padding:10}}>
                                                 <Image source={{uri:item.avatar}} style={{height:80, width:80, borderRadius:50}} />
                                                 <Text numberOfLines={2} style={{textAlign:'center', marginTop:5, color: '#2e373c', fontFamily: 'sans-serif-medium'}}>{item.name}</Text>
-                                                <Text style={{textAlign:'center'}}>{item.location.city.name === undefined ? null : item.location.city.name}</Text>
+                                                <Text style={{textAlign:'center'}}>{item.location.city.name}</Text>
                                             </View>
                                         </TouchableOpacity>
                                     )
@@ -336,9 +321,9 @@ export default class Maps extends Component {
                     </ScrollView>
                 </Modal>
 
-                <TouchableOpacity style={{position:'absolute', top:0, left:0, backgroundColor:'#fff', padding:6, elevation:5, marginTop:10, marginLeft:10}} onPress={this.refresh}>
+                {/* <TouchableOpacity style={{position:'absolute', top:0, left:0, backgroundColor:'#fff', padding:6, elevation:5, marginTop:10, marginLeft:10, display:'none'}} onPress={this.refresh}>
                     <Image source={require('../assets/icon/refresh.png')} style={{width:25, height:25}} />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
             </React.Fragment>
         )
     }
