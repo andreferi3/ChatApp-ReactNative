@@ -57,22 +57,7 @@ export default class Register extends Component {
   }
 
   validate = () => {
-    if (this.state.phone.length < 10) {
-      this.setState({ errPhone: 'Phone number less than 10!' })
-    } else {
-      this.setState({ errPhone: false })
-    }
-    if (this.state.password.length < 6) {
-      this.setState({ errPassword: 'Too short!' })
-    } else {
-      this.setState({ errPassword: false })
-    }
-    if (this.state.name.length < 5) {
-      this.setState({ errName: 'Too short!' })
-    } else {
-      this.setState({ errName: false })
-    }
-    if (this.state.name != '' && this.state.date != '' && this.state.email != '' && this.state.password != '') {
+    if (this.state.errName === false && this.state.errPhone === false && this.state.errEmail === false && this.state.errPassword == false) {
       this.register()
     }
   }
@@ -98,10 +83,10 @@ export default class Register extends Component {
             phone: this.state.phone,
             avatar: this.state.image == '' ? 'http://www.thesanctuaryinstitute.org/wp-content/uploads/2018/07/missing-image-avatar.png' : this.state.image,
             location: {
-              latitude: this.state.latitude,
-              longitude: this.state.longitude,
+              latitude: -6.3322398,
+              longitude: 107.6743352,
               city: {
-                name: ""
+                name: "Untracked"
               }
             }
           })
@@ -130,21 +115,44 @@ export default class Register extends Component {
   }
 
   changeName = val => {
-    this.setState({
-      name: val
-    })
+    let reg = /^[a-zA-Z ]*$/
+    if(reg.test(val) === false) {
+      this.setState({
+        errName: 'Text Only!'
+      })
+    } else {
+      this.setState({
+        name: val,
+        errName: false
+      })
+    }
   }
 
   changePhone = val => {
-    this.setState({
-      phone: val
-    })
+    let reg = /^[0-9]*$/
+    if(reg.test(val) === false) {
+      this.setState({
+        errPhone: 'Number only!'
+      })
+    } else {
+      this.setState({
+        phone: val,
+        errPhone: false
+      })
+    }
   }
 
   changePassword = val => {
-    this.setState({
-      password: val
-    })
+    if(val.length < 6) {
+      this.setState({
+        errPassword: 'Password must more than 6 character'
+      })
+    } else {
+      this.setState({
+        password: val,
+        errPassword: false
+      })
+    }
   }
 
   changeEmail = (text) => {

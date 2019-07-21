@@ -7,11 +7,12 @@ import Chat from '../screens/Chat';
 import Profile from '../screens/Profile';
 import Maps from '../screens/Maps';
 import FriendProfile from '../screens/FriendProfile';
+import SplashScreen from '../screens/SplashScreen';
 
 // Implementation of HomeScreen, OtherScreen, SignInScreen, AuthLoadingScreen
 // goes here.
 
-const AppStack = createStackNavigator({ 
+const AppStack = createStackNavigator({
   Home: {
     screen: Dashboard,
     navigationOptions: () => ({
@@ -50,11 +51,12 @@ const AuthStack = createStackNavigator({
 
 export default createAppContainer(createSwitchNavigator(
   {
+    SplashScreen,
     AuthLoading: AuthLoadingScreen,
     App: AppStack,
     Auth: AuthStack,
   },
   {
-    initialRouteName: 'AuthLoading',
+    initialRouteName: 'SplashScreen',
   }
 ));

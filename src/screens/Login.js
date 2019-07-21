@@ -7,7 +7,8 @@ import {
   Image,
   StatusBar,
   AsyncStorage,
-  ActivityIndicator
+  ActivityIndicator,
+  Alert
 } from 'react-native';
 import firebase from 'firebase';
 import LinearGradient from 'react-native-linear-gradient';
@@ -19,7 +20,7 @@ export default class Login extends Component {
   constructor() {
     super();
 
-    this.getUserLocation();    
+    this.getUserLocation();
 
     this.state = {
       email: '',
@@ -32,16 +33,16 @@ export default class Login extends Component {
 
   async getUserLocation() {
     await navigator.geolocation.getCurrentPosition(
-        (position) => {
-            this.setState({
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude
-            })
-        },
-        (error) => {
-            console.warn('Error ' + error.message)
-        },
-        { enableHighAccuracy: true, maximumAge: 1000, timeout: 200000 }
+      (position) => {
+        this.setState({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        })
+      },
+      (error) => {
+        console.warn('Error ' + error.message)
+      },
+      { enableHighAccuracy: true, maximumAge: 1000, timeout: 200000 }
     )
   }
 
@@ -70,21 +71,33 @@ export default class Login extends Component {
       .then(async ({ user }) => {
         User.uid = user.uid;
         User.email = this.state.email;
-        firebase.database().ref('users/'+user.uid).update({status:"Online"})
+        this.setState({
+          isLoading: false
+        })
+        firebase.database().ref('users/' + user.uid).update({ status: "Online" })
         await AsyncStorage.setItem('userEmail', this.state.email);
         await AsyncStorage.setItem('userId', user.uid);
         this.props.navigation.navigate('App');
-        this.setState({isLoading:false})
-      }).catch(function (error) {
+        this.setState({ isLoading: false })
+      }).catch((error) => {
         // Handle Errors here.
         var errorCode = error.code;
         var errorMessage = error.message;
+        this.setState({
+          isLoading: false
+        })
         if (errorCode === 'auth/wrong-password') {
-          alert('Wrong password.');
-          this.setState({isLoading:false})
+          Alert.alert(
+            'Sorry!',
+            'Wrong password, please try again :)'
+          )
+          this.setState({ isLoading: false })
         } else {
-          alert(errorMessage);
-          this.setState({isLoading:false})
+          Alert.alert(
+            'Sorry!',
+            'User not found!'
+          )
+          this.setState({ isLoading: false })
         }
         console.log(error);
       });
@@ -132,10 +145,6 @@ export default class Login extends Component {
             <Text style={styles.textLogo}
             >Chat Kuy</Text>
 
-            {
-              this.state.isLoading === true ? <ActivityIndicator size={'large'} /> : null
-            }
-
             <TextInput style={styles.textInput} placeholder='Email address...' keyboardType={'email-address'} onChangeText={this._onChangeEmail} value={this.state.email} />
             {
               this.state.errEmail !== true ? <Text style={{ marginTop: 10, marginLeft: 5, color: '#ff0000' }}>{this.state.errEmail}</Text> : null
@@ -146,11 +155,15 @@ export default class Login extends Component {
               this.state.errPassword !== true ? <Text style={{ marginTop: 10, marginLeft: 5, color: '#ff0000' }}>{this.state.errPassword}</Text> : null
             }
 
-            <TouchableOpacity style={styles.flexRow} onPress={() => this.validate()}>
-              <View style={styles.button}>
-                <Text style={styles.textButton}>Login</Text>
-              </View>
-            </TouchableOpacity>
+            {
+              this.state.isLoading === true ? <ActivityIndicator size={'large'} /> : 
+            
+              <TouchableOpacity style={styles.flexRow} onPress={() => this.validate()}>
+                <View style={styles.button}>
+                  <Text style={styles.textButton}>Login</Text>
+                </View>
+              </TouchableOpacity>
+            }
 
             <View style={[styles.flexRow, { flexDirection: 'row', marginTop: 50, alignItems: 'center' }]}>
               <Text style={styles.whiteText}>Or login using</Text>

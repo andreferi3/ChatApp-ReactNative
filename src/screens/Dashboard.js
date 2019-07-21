@@ -5,11 +5,13 @@ import {
     TouchableOpacity,
     Modal,
     FlatList,
-    Image
+    Image,
+    Alert
 } from 'react-native';
 import User from '../../User';
 import firebase from 'firebase';
 import LinearGradient from 'react-native-linear-gradient';
+import Swipeout from 'react-native-swipeout';
 
 export default class Dashboard extends Component {
 
@@ -50,6 +52,35 @@ export default class Dashboard extends Component {
                 email: User.email
             }
         })
+
+        dbRef.on('child_changed', (val) => {
+            let person = val.val();
+            person.uid = val.key;
+            if(person.uid !== User.uid) {
+                this.setState((prevState) => {
+                    return {
+                        users: prevState.users.map(user => {
+                            if(user.uid === person.uid) {
+                                user = person
+                            }
+                            return user
+                        })
+                    }
+                })
+            }
+        })
+
+        dbRef.on('child_removed', (val) => {
+            let person = val.val();
+            person.uid = val.key;
+            if(person.uid !== User.uid) {
+                this.setState((prevState) => {
+                    return {
+                        users: prevState.users.filter(user => person.uid != user.uid)
+                    }
+                })
+            }
+        })
     }
 
     convertTime = (time) => {
@@ -86,22 +117,52 @@ export default class Dashboard extends Component {
         }
     }
 
+    deleteMessage(data) {
+        Alert.alert(
+            'Attention!',
+            'Are you sure want to delete all the message ?',
+            [{
+                text: 'Cancel',
+                onPress: () => console.log('Cancel Pressed'),
+                style: 'cancel',
+            },
+            {},
+            {text: 'OK', onPress: () => {
+                let rmvDeb = firebase.database().ref('users/'+User.uid+'/message');
+                rmvDeb.child(data.uid).remove();
+                
+                let rmvMsg = firebase.database().ref('messages/'+User.uid+'/'+data.uid);
+                rmvMsg.remove();
+            }}],
+            {cancelable: false},
+        )
+    }
+
     _renderItem = ({ item }) => {
+        var swipeoutBtns = [
+            {
+              text: 'Delete',
+              type: 'delete',
+              onPress: () => {this.deleteMessage(item)}
+            }
+          ]
         return (
-            <View style={{ marginBottom: 20 }}>
+            <Swipeout left={swipeoutBtns} backgroundColor={'rgba(255,255,255,0.001)'}>
+                <View style={{ marginBottom: 20 }}>
                 <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => this.props.navigation.navigate('Chat', item)}>
                     <TouchableOpacity onPress={() => {this.setModalVisible(true, item)}}>
                         <Image source={{ uri: item.avatar }} style={{ width: 50, height: 50, borderRadius: 50 }} />
                     </TouchableOpacity>
                     <View style={{ padding: 10, flex: 3 }}>
                         <Text style={{ fontSize: 23, color: '#f1f1f1', fontFamily: 'sans-serif-medium', fontWeight: 'bold' }}>{item.name}</Text>
-                        <Text style={{ fontFamily: 'sans-serif-light', fontSize: 16, fontWeight: '600' }} numberOfLines={1}>Kamu : {item.messageText}</Text>
+                        <Text style={{ fontFamily: 'sans-serif-light', fontSize: 16, fontWeight: '600' }} numberOfLines={1}>{item.messageText}</Text>
                     </View>
                     <View style={{ padding: 10, flex: 1, justifyContent: 'center', alignItems: 'flex-end' }}>
                         <Text style={{ color: '#f1f1f1', fontSize: 11, fontFamily: 'sans-serif-medium' }}>{this.convertTime(item.time)}</Text>
                     </View>
                 </TouchableOpacity>
-            </View>
+                </View>
+            </Swipeout>
         )
     }
 
@@ -117,7 +178,8 @@ export default class Dashboard extends Component {
                     <FlatList
                         data={this.state.users}
                         keyExtractor={(item) => item.uid}
-                        renderItem={this._renderItem} />
+                        renderItem={this._renderItem}
+                        style={{marginBottom:90}} />
 
                     <Modal
                         animationType="fade"

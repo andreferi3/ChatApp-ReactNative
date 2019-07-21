@@ -70,6 +70,31 @@ export default class Profile extends Component {
                 })
             }
         })
+
+        dbRef.on('child_changed', (val) => {
+            let person = val.val();
+            person.uid = val.key;
+            if(person.uid !== User.uid) {
+                this.setState((prevState) => {
+                    return {
+                        friend: prevState.friend.map(user => {
+                            if(user.uid === person.uid) {
+                                user = person
+                            }
+                            return user
+                        })
+                    }
+                })
+            } else {
+                this.setState({
+                    name: person.name,
+                    avatar: person.avatar,
+                    phone: person.phone,
+                    email: person.email,
+                    about: person.about,
+                })
+            }
+        })
     }
 
     onClose() {
@@ -105,11 +130,17 @@ export default class Profile extends Component {
     }
 
     changeImage = (val) => {
-        this.setState((prevState) => {
-            return {
-                avatar: prevState.avatar = val
-            }
-        })
+        if(!val || val.length === 0) {
+            this.setState({
+                avatar: 'http://www.thesanctuaryinstitute.org/wp-content/uploads/2018/07/missing-image-avatar.png'
+            })
+        } else {
+            this.setState((prevState) => {
+                return {
+                    avatar: prevState.avatar = val
+                }
+            })
+        }
     }
 
     changeName = (val) => {
