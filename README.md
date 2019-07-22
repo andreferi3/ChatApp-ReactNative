@@ -30,4 +30,6 @@ If u want develope and take a part to make this app more better, feel free to fo
 
 ## Setting up Firebase
 
-The most important from this app is the database, yes, you must setup the database first at firebase. You can follow the instuctions how to create a real time database here :[Create and Integrating Firebase in React Native](https://www.metizsoft.com/blog/real-time-firebase-integration-with-react-native)
+The most important from this app is the database, yes, you must setup the database first at firebase. You can follow the instuctions how to create a real time database here :[Create and Integrating Firebase in React Native](https://www.metizsoft.com/blog/real-time-firebase-integration-with-react-native).
+
+After you create a real time database at firebase and you got a Web Configuration, you must put the firebase web configuration at this file [AuthLoadingScreen](https://github.com/andreferi3/ChatApp-ReactNative/blob/master/src/screens/AuthLoadingScreen.js)
