@@ -25,11 +25,21 @@ In this project i'am using firebase as database. Why ? because Firebase provides
 If u want develope and take a part to make this app more better, feel free to fork or clone this repository and tag me as creator.
 
 ## Requirements
+1. `node`, `npm`, `react-native-cli`
 1. This repository, clone into your local disk
 2. Firebase Account
+3. Google Cloud (to make API Maps SDK)
 
 ## Setting up Firebase
 
 The most important from this app is the database, yes, you must setup the database first at firebase. You can follow the instuctions how to create a real time database here :[Create and Integrating Firebase in React Native](https://www.metizsoft.com/blog/real-time-firebase-integration-with-react-native).
 
-After you create a real time database at firebase and you got a Web Configuration, you must put the firebase web configuration at this file [AuthLoadingScreen](https://github.com/andreferi3/ChatApp-ReactNative/blob/master/src/screens/AuthLoadingScreen.js)
+fter you create a real time database at firebase and you got a Web Configuration, you must put the firebase web configuration at this file [AuthLoadingScreen](https://github.com/andreferi3/ChatApp-ReactNative/blob/master/src/screens/AuthLoadingScreen.js)
+
+## Create and Implement API Maps SDK
+
+To make a new API Maps SDK and Implement it to your react native project, you can follow this instructions : [Get API Key](https://developers.google.com/maps/documentation/android-sdk/get-api-key)
+
+## Last Step
+
+After you follow the instructions above, now you can go ahead to the last step
