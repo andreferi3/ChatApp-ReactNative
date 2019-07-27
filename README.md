@@ -40,6 +40,13 @@ fter you create a real time database at firebase and you got a Web Configuration
 
 To make a new API Maps SDK and Implement it to your react native project, you can follow this instructions : [Get API Key](https://developers.google.com/maps/documentation/android-sdk/get-api-key)
 
+Don't forget after you create a new Maps SDK API, you must put the API to this file : **[AndroidManifest.xml](https://github.com/andreferi3/ChatApp-ReactNative/blob/master/android/app/src/main/AndroidManifest.xml)**
+
 ## Last Step
 
-After you follow the instructions above, now you can go ahead to the last step
+After you follow the instructions above, now you can go ahead to the last step, follow the instruction as well :
+1. Open the terminal in the project, if u use text editor Visual Studio Code you can do with **CTRL + SHIFT + `**
+2. Type in the terminal `npm install`
+3. Then, type `react-native link` to link all dependencies in this project
+4. And then type `react-native run-android` to run the project in your phone or emulator, the first be sure you connecting your Android Phone or Emulator with enabling USB Debugging.
+5. Enjoy the app! If you have a question feel free to send me email : [andreferi135@gmail.com](mailto:andreferi135@gmail.com)
